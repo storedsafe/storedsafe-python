@@ -4,15 +4,27 @@ Transparent Python wrapper for the StoredSafe REST-like API.
 
 Full documentation of the API response signatures and more advanced paramters can be found at the [StoredSafe API Documentation](https://developer.storedsafe.com/).
 
-For create and edit functions, parameters can be easily passed as keyword arguments, for example:
+## Examples
+For create and edit methods, parameters can be easily passed as keyword arguments, for example:
 ```python
 api.create_vault(vaultname="My Vault", policy=7, description="Sercret")
 ```
 
-Or if you're receiving data in dict-format, it can be unpacked into the function:
+Or if you're receiving data in dict-format, it can be unpacked into the method:
 ```python
 data = function_that_returns_data()
 api.create_vault(**data)
+```
+
+The return value of all methods is a [`requests` response object](https://requests.readthedocs.io/en/latest/api/#requests.Response). To obtain the data returned by a successful response object, you can use the `json()` function:
+```python
+r = api.list_vaults()
+if <= 403:
+    data = r.json()
+    if r.ok:
+        print(data['VAULTS'])
+    else:
+        print(data['ERRORS'])
 ```
 
 ## Usage

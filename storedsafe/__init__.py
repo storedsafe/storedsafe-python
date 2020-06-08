@@ -10,7 +10,7 @@ class StoredSafe:
         self.token = token
 
     ###
-    # Helper functions.
+    # Helper methods.
     ##
     def __auth(self, data):
         """Authenticate with StoredSafe and save token if the request was successful."""
@@ -55,7 +55,7 @@ class StoredSafe:
         return requests.delete(self.__get_url(path), headers=self.__headers())
 
     ###
-    # API Auth functions.
+    # API Auth methods.
     ##
     def login_totp(self, username, passphrase, otp):
         """Request login using TOTP."""
@@ -86,7 +86,7 @@ class StoredSafe:
         return self.__post('/auth/check', {})
 
     ###
-    # API Vault functions.
+    # API Vault methods.
     ##
     def list_vaults(self):
         """Request a list of all vaults."""
@@ -113,7 +113,7 @@ class StoredSafe:
         return self.__delete(f'/vault/{vault_id}')
 
     ###
-    # API Object functions.
+    # API Object methods.
     ##
     def get_object(self, object_id, children=False):
         """Request a StoredSafe object and optionally its children."""
@@ -140,7 +140,7 @@ class StoredSafe:
         return self.__get('/find', {'needle': needle})
 
     ###
-    # API Templates functions.
+    # API Templates methods.
     ##
     def list_templates(self):
         """Request a list of all available templates."""
@@ -151,7 +151,7 @@ class StoredSafe:
         return self.__get(f'/template/{template_id}')
 
     ###
-    # API User functions
+    # API User methods
     ##
     def list_users(self, search_string=None):
         """Request list of all users or any users matching search string."""
@@ -173,7 +173,7 @@ class StoredSafe:
         return self.__delete(f'/user/{user_id}')
 
     ###
-    # API Utils functions.
+    # API Utils methods.
     ##
     def status_values(self):
         """Request a list of all available capabilities and permission bits."""
