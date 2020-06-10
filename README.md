@@ -20,8 +20,8 @@ The return value of all methods is a [`requests` response object](https://reques
 ```python
 r = api.list_vaults()
 if <= 403:
-    data = r.json()
-    if r.ok:
+    data = res.json()
+    if res.ok:
         print(data['VAULTS'])
     else:
         print(data['ERRORS'])

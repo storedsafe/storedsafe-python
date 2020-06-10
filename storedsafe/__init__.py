@@ -1,29 +1,41 @@
+"""StoredSafe API wrapper module."""
 import requests
 
+class ApikeyUndefinedException(Exception):
+    """Cannot authenticate with StoredSafe API calls because apikey is not defined."""
+
 class TokenUndefinedException(Exception):
-    pass
+    """Cannot use privileged StoredSafe API calls because token is not defined."""
 
 class StoredSafe:
-    def __init__(self, host, apikey, token=None):
+    """StoredSafe API wrapper class."""
+    def __init__(self, host, apikey=None, token=None, version='1.0'):
         self.host = host
         self.apikey = apikey
         self.token = token
+        self.version = version
 
     ###
     # Helper methods.
     ##
+    def __assert_apikey_exists(self):
+        """Throws ApikeyUndefinedException if token is None."""
+        if self.apikey is None:
+            raise ApikeyUndefinedException()
+
     def __auth(self, data):
         """Authenticate with StoredSafe and save token if the request was successful."""
-        r = requests.post(self.__get_url('/auth'), json=data)
-        if r.status_code == 200:
-            data = r.json()
+        self.__assert_apikey_exists()
+        res = requests.post(self.__get_url('/auth'), json=data)
+        if res.status_code == 200:
+            data = res.json()
             self.token = data['CALLINFO']['token']
-        return r
+        return res
 
     def __headers(self):
         """Create the required headers for requests to the StoredSafe API."""
         self.__assert_token_exists()
-        return { 'X-Http-Token': self.token }
+        return {'X-Http-Token': self.token}
 
     def __assert_token_exists(self):
         """Throws TokenUndefinedException if token is None."""
@@ -32,7 +44,7 @@ class StoredSafe:
 
     def __get_url(self, path):
         """Get the full url of the relative API path."""
-        return f'https://{self.host}/api/1.0{path}'
+        return f'https://{self.host}/api/{self.version}/{path.strip("/")}'
 
     def __get(self, path, params=None):
         """Send a GET request to the provided relative API path."""
@@ -155,10 +167,9 @@ class StoredSafe:
     ##
     def list_users(self, search_string=None):
         """Request list of all users or any users matching search string."""
-        if (search_string):
+        if search_string:
             return self.__get('/user')
-        else:
-            return self.__get('/user', { 'searchstring': search_string })
+        return self.__get('/user', {'searchstring': search_string})
 
     def create_user(self, **params):
         """Request the creation of a new user."""
