@@ -13,7 +13,7 @@ class StoredSafe:
         self.host = host
         self.apikey = apikey
         self.token = token
-        self.version = version
+        self.api_version = version
 
     ###
     # Helper methods.
@@ -44,7 +44,7 @@ class StoredSafe:
 
     def __get_url(self, path):
         """Get the full url of the relative API path."""
-        return f'https://{self.host}/api/{self.version}/{path.strip("/")}'
+        return f'https://{self.host}/api/{self.api_version}/{path.strip("/")}'
 
     def __get(self, path, params=None):
         """Send a GET request to the provided relative API path."""
@@ -196,8 +196,8 @@ class StoredSafe:
 
     def version(self):
         """Request the version of the StoredSafe server."""
-        return self.__get('/utils/policies')
+        return self.__get('/utils/version')
 
     def generate_password(self, **params):
         """Request a password generated with the passed settings (or vault policy)."""
-        return self.__get('/utils/policies', params=params)
+        return self.__get('/utils/pwgen', params=params)
