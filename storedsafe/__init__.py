@@ -133,7 +133,11 @@ class StoredSafe:
 
     def decrypt_object(self, object_id):
         """Request the decryption of a StoredSafe object."""
-        return self.__get(f'/object/{object_id}')
+        return self.__get(f'/object/{object_id}', {'decrypt': 'true'})
+
+    def get_file(self, object_id):
+        """Request a base64 string of a file object."""
+        return self.__get(f'/object/{object_id}', {'decrypt': 'true', 'filedata': 'true'})
 
     def create_object(self, **params):
         """Request the creation of an object."""
