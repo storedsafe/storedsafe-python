@@ -4,6 +4,14 @@ Transparent Python wrapper for the StoredSafe REST-like API.
 
 Full documentation of the API response signatures and more advanced paramters can be found at the [StoredSafe API Documentation](https://developer.storedsafe.com/).
 
+
+## Install
+
+Install from pypi
+```bash
+pip install storedsafe
+```
+
 ## Examples
 For create and edit methods, parameters can be easily passed as keyword arguments, for example:
 ```python
