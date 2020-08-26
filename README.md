@@ -7,7 +7,7 @@ Full documentation of the API response signatures and more advanced paramters ca
 
 ## Install
 
-Install from pypi
+Install [storedsafe](https://pypi.org/project/storedsafe/) from pypi.
 ```bash
 pip install storedsafe
 ```
