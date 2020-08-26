@@ -1,14 +1,18 @@
 """StoredSafe API wrapper module."""
 import requests
 
+
 class ApikeyUndefinedException(Exception):
     """Cannot authenticate with StoredSafe API calls because apikey is not defined."""
+
 
 class TokenUndefinedException(Exception):
     """Cannot use privileged StoredSafe API calls because token is not defined."""
 
+
 class StoredSafe:
     """StoredSafe API wrapper class."""
+
     def __init__(self, host, apikey=None, token=None, version='1.0'):
         self.host = host
         self.apikey = apikey
@@ -49,6 +53,8 @@ class StoredSafe:
     def __get(self, path, params=None):
         """Send a GET request to the provided relative API path."""
         self.__assert_token_exists()
+        if params is None:
+            return requests.get(self.__get_url(path), headers=self.__headers())
         return requests.get(self.__get_url(path), params=params, headers=self.__headers())
 
     def __post(self, path, data):
@@ -112,6 +118,18 @@ class StoredSafe:
         """Request a list of the members in a vault."""
         return self.__get(f'/vault/{vault_id}/members')
 
+    def add_vault_member(self, vault_id, user_id, status):
+        """Request to add a member to a vault."""
+        return self.__post(f'/vault/{vault_id}/member/{user_id}', {'status': status})
+
+    def edit_vault_member(self, vault_id, user_id, status):
+        """Request to edit a member in a vault."""
+        return self.__put(f'/vault/{vault_id}/member/{user_id}', {'status': status})
+
+    def remove_vault_member(self, vault_id, user_id):
+        """Request to remove a member from a vault."""
+        return self.__delete(f'/vault/{vault_id}/member/{user_id}')
+
     def create_vault(self, **params):
         """Request the creation of a new vault."""
         return self.__post('/vault', params)
@@ -129,7 +147,7 @@ class StoredSafe:
     ##
     def get_object(self, object_id, children=False):
         """Request a StoredSafe object and optionally its children."""
-        return self.__get(f'/object/{object_id}', {'children': children})
+        return self.__get(f'/object/{object_id}', {'children': 'true' if children else 'false'})
 
     def decrypt_object(self, object_id):
         """Request the decryption of a StoredSafe object."""
@@ -171,9 +189,13 @@ class StoredSafe:
     ##
     def list_users(self, search_string=None):
         """Request list of all users or any users matching search string."""
-        if search_string:
+        if search_string is None:
             return self.__get('/user')
-        return self.__get('/user', {'searchstring': search_string})
+        return self.__get(f'/user/{search_string}')
+
+    def get_user(self, user_id):
+        """Request user matching the user_id."""
+        return self.__get(f'/user/{user_id}')
 
     def create_user(self, **params):
         """Request the creation of a new user."""
