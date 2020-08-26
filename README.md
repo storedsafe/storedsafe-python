@@ -57,8 +57,8 @@ api.delete_object(object_id)
 
 # Users
 api.list_users() # List all users
-api.list_users(user_id) # List specific user
 api.list_users(search_string) # Search for any user matching search_string
+api.get_user(user_id)
 api.create_user(**params)
 api.edit_user(user_id, **params)
 api.delete_user(user_id)
@@ -67,6 +67,6 @@ api.delete_user(user_id)
 api.status_values()
 api.password_policies()
 api.version()
-api.generate_password() # Use vault policy
+api.generate_password() # Use default settings
 api.generate_password(**params)
 ```
