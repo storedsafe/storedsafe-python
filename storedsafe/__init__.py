@@ -1,6 +1,9 @@
 """StoredSafe API wrapper module."""
+from pathlib import Path
 import requests
 
+class RCException(Exception):
+    """Failed to read rc file."""
 
 class ApikeyUndefinedException(Exception):
     """Cannot authenticate with StoredSafe API calls because apikey is not defined."""
@@ -10,8 +13,27 @@ class TokenUndefinedException(Exception):
     """Cannot use privileged StoredSafe API calls because token is not defined."""
 
 
+# pylint: disable=too-many-public-methods
 class StoredSafe:
     """StoredSafe API wrapper class."""
+
+    @staticmethod
+    def from_rc(path=Path.home() / '.storedsafe-client.rc'):
+        """Create StoredSafe instance from rc-file"""
+        config = {}
+        try:
+            with Path(path).open('r') as rc_file:
+                for line in rc_file:
+                    [key, value] = line.strip().split(':')
+                    if key == 'mysite':
+                        config['host'] = value
+                    elif key == 'apikey':
+                        config['apikey'] = value
+                    elif key == 'token':
+                        config['token'] = value
+        except:
+            raise RCException()
+        return StoredSafe(**config)
 
     def __init__(self, host, apikey=None, token=None, version='1.0'):
         self.host = host

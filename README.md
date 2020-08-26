@@ -13,6 +13,36 @@ pip install storedsafe
 ```
 
 ## Examples
+
+### Login
+
+```python
+# Initial configuration
+api = StoredSafe(host='my.site.com', apikey='my-apikey')
+
+# Login using TOTP
+api.login_totp(username='my-username', passphrase='my-passphrase', otp='my-timed-otp')
+
+# Login using YubiKey
+api.login_yubikey(username='my-username', passphrase='my-passphrase', otp='my-yubico-otp')
+```
+
+In the event you already have a token, you can skip the previous step and input the token directly.
+```python
+api = StoredSafe(host='my.site.com', token='my-storedsafe-token')
+```
+
+If you're using the [StoredSafe tokenhandler](https://github.com/storedsafe/tokenhandler), you can also retrieve the host, apikey and token from an rc-file:
+```python
+# Default rc location
+api = StoredSafe.from_rc()
+
+# Custom rc location
+api = StoredSafe.from_rc(path='/path/to/rc-file')
+```
+
+### Programming styles
+
 For create and edit methods, parameters can be easily passed as keyword arguments, for example:
 ```python
 api.create_vault(vaultname="My Vault", policy=7, description="Sercret")
@@ -23,6 +53,8 @@ Or if you're receiving data in dict-format, it can be unpacked into the method:
 data = function_that_returns_data()
 api.create_vault(**data)
 ```
+
+### Return types
 
 The return value of all methods is a [`requests` response object](https://requests.readthedocs.io/en/latest/api/#requests.Response). To obtain the data returned by a successful response object, you can use the `json()` function:
 ```python
@@ -39,11 +71,17 @@ if <= 403:
 
 ```python
 from storedsafe import StoredSafe
-api = StoredSafe('my.site.com', 'my-api-key')
+
+# Manual configuration
+api = StoredSafe(host='my.site.com', apikey='my-apikey', token='my-storedsafe-token')
+
+# Automatic configuration
+api = StoredSafe.from_rc() # Use default path ~/.storedsafe-client.rc
+api = StoredSafe.from_rc(path='/path/to/rc-file')
 
 # Auth
-api.login_totp('username', 'passphrase', 'otp')
-api.login_yubikey('username', 'passphrase', 'otp')
+api.login_totp(username='my-username', passphrase='my-passphrase', otp='my-otp')
+api.login_yubikey(username='my-username', passphrase='my-passphrase', otp='my-otp')
 api.logout()
 api.check()
 
