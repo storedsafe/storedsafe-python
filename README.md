@@ -58,13 +58,27 @@ api.create_vault(**data)
 
 The return value of all methods is a [`requests` response object](https://requests.readthedocs.io/en/latest/api/#requests.Response). To obtain the data returned by a successful response object, you can use the `json()` function:
 ```python
-r = api.list_vaults()
-if <= 403:
+res = api.list_vaults()
+if res.status_code <= 403:
     data = res.json()
     if res.ok:
         print(data['VAULTS'])
     else:
         print(data['ERRORS'])
+```
+
+### Files
+
+Files are returned as a base64 string and must be decoded to restore the original state of the file.
+```python
+import base64
+
+res = api.get_file(object_id)
+data = res.json()
+filedata = base64.urlsafe_b64decode(data['FILEDATA'])
+filedata_utf8 = filedata.decode('utf-8') # If you want to use UTF-8 encoding
+with open(path, 'w') as f:
+    f.write(filedata_utf8)
 ```
 
 ## Usage
@@ -97,6 +111,7 @@ api.delete_vault(vault_id)
 api.get_object(object_id) # String or integer
 api.get_object(object_id, children=True) # children False by default
 api.decrypt_object(object_id)
+api.get_file(object_id) # Decrypt file and get base64 version of file
 api.create_object(**params)
 api.edit_object(object_id, **params)
 api.delete_object(object_id)
