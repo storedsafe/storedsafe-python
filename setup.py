@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="storedsafe",
-    version="1.1.0",
+    version="1.2.0",
     author="Oscar Mattsson",
     author_email="oscar@storedsafe.com",
     description="Wrapper for the StoredSafe REST-like API.",

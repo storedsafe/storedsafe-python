@@ -2,8 +2,10 @@
 from pathlib import Path
 import requests
 
+
 class RCException(Exception):
     """Failed to read rc file."""
+
 
 class ApikeyUndefinedException(Exception):
     """Cannot authenticate with StoredSafe API calls because apikey is not defined."""
@@ -18,7 +20,7 @@ class StoredSafe:
     """StoredSafe API wrapper class."""
 
     @staticmethod
-    def from_rc(path=Path.home() / '.storedsafe-client.rc'):
+    def from_rc(path=Path.home() / '.storedsafe-client.rc', **requests_options):
         """Create StoredSafe instance from rc-file"""
         config = {}
         try:
@@ -33,13 +35,14 @@ class StoredSafe:
                         config['token'] = value
         except:
             raise RCException()
-        return StoredSafe(**config)
+        return StoredSafe(**config, **requests_options)
 
-    def __init__(self, host, apikey=None, token=None, version='1.0'):
+    def __init__(self, host, apikey=None, token=None, version='1.0', **requests_options):
         self.host = host
         self.apikey = apikey
         self.token = token
         self.api_version = version
+        self.requests_options = requests_options
 
     ###
     # Helper methods.
@@ -49,10 +52,14 @@ class StoredSafe:
         if self.apikey is None:
             raise ApikeyUndefinedException()
 
-    def __auth(self, data):
+    def __auth(self, data, requests_options):
         """Authenticate with StoredSafe and save token if the request was successful."""
         self.__assert_apikey_exists()
-        res = requests.post(self.__get_url('/auth'), json=data)
+        res = requests.post(
+            self.__get_url('/auth'),
+            **self.requests_options,
+            **requests_options,
+            json=data)
         if res.status_code == 200:
             data = res.json()
             self.token = data['CALLINFO']['token']
@@ -72,32 +79,51 @@ class StoredSafe:
         """Get the full url of the relative API path."""
         return f'https://{self.host}/api/{self.api_version}/{path.strip("/")}'
 
-    def __get(self, path, params=None):
+    def __get(self, path, params=None, requests_options={}):
         """Send a GET request to the provided relative API path."""
         self.__assert_token_exists()
         if params is None:
             return requests.get(self.__get_url(path), headers=self.__headers())
-        return requests.get(self.__get_url(path), params=params, headers=self.__headers())
+        return requests.get(
+            self.__get_url(path),
+            **self.requests_options,
+            **requests_options,
+            params=params,
+            headers=self.__headers())
 
-    def __post(self, path, data):
+    def __post(self, path, data, requests_options={}):
         """Send a POST request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.post(self.__get_url(path), json=data, headers=self.__headers())
+        return requests.post(
+            self.__get_url(path),
+            **self.requests_options,
+            **requests_options,
+            json=data,
+            headers=self.__headers())
 
-    def __put(self, path, data):
+    def __put(self, path, data, requests_options={}):
         """Send a PUT request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.put(self.__get_url(path), json=data, headers=self.__headers())
+        return requests.put(
+            self.__get_url(path),
+            **self.requests_options,
+            **requests_options,
+            json=data,
+            headers=self.__headers())
 
-    def __delete(self, path):
+    def __delete(self, path, requests_options={}):
         """Send a DELETE request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.delete(self.__get_url(path), headers=self.__headers())
+        return requests.delete(
+            self.__get_url(path),
+            **self.requests_options,
+            **requests_options,
+            headers=self.__headers())
 
     ###
     # API Auth methods.
     ##
-    def login_totp(self, username, passphrase, otp):
+    def login_totp(self, username, passphrase, otp, requests_options={}):
         """Request login using TOTP."""
         data = {
             'username': username,
@@ -106,146 +132,146 @@ class StoredSafe:
             'apikey': self.apikey,
             'logintype': 'totp',
         }
-        return self.__auth(data)
+        return self.__auth(data, requests_options)
 
-    def login_yubikey(self, username, passphrase, otp):
+    def login_yubikey(self, username, passphrase, otp, requests_options={}):
         """Request login using Yubico OTP."""
         data = {
             'username': username,
             'keys': f'{passphrase}{self.apikey}{otp}',
             'apikey': self.apikey,
         }
-        return self.__auth(data)
+        return self.__auth(data, requests_options)
 
-    def logout(self):
+    def logout(self, requests_options={}):
         """Request logout."""
-        return self.__get('/auth/logout')
+        return self.__get('/auth/logout', requests_options)
 
-    def check(self):
+    def check(self, requests_options={}):
         """Request check status of session."""
-        return self.__post('/auth/check', {})
+        return self.__post('/auth/check', {}, requests_options)
 
     ###
     # API Vault methods.
     ##
-    def list_vaults(self):
+    def list_vaults(self, requests_options={}):
         """Request a list of all vaults."""
-        return self.__get('/vault')
+        return self.__get('/vault', requests_options)
 
-    def vault_objects(self, vault_id):
+    def vault_objects(self, vault_id, requests_options={}):
         """Request a list of the objects in a vault."""
-        return self.__get(f'/vault/{vault_id}')
+        return self.__get(f'/vault/{vault_id}', requests_options)
 
-    def vault_members(self, vault_id):
+    def vault_members(self, vault_id, requests_options={}):
         """Request a list of the members in a vault."""
-        return self.__get(f'/vault/{vault_id}/members')
+        return self.__get(f'/vault/{vault_id}/members', requests_options)
 
-    def add_vault_member(self, vault_id, user_id, status):
+    def add_vault_member(self, vault_id, user_id, status, requests_options={}):
         """Request to add a member to a vault."""
-        return self.__post(f'/vault/{vault_id}/member/{user_id}', {'status': status})
+        return self.__post(f'/vault/{vault_id}/member/{user_id}', {'status': status}, requests_options)
 
-    def edit_vault_member(self, vault_id, user_id, status):
+    def edit_vault_member(self, vault_id, user_id, status, requests_options={}):
         """Request to edit a member in a vault."""
-        return self.__put(f'/vault/{vault_id}/member/{user_id}', {'status': status})
+        return self.__put(f'/vault/{vault_id}/member/{user_id}', {'status': status}, requests_options)
 
-    def remove_vault_member(self, vault_id, user_id):
+    def remove_vault_member(self, vault_id, user_id, requests_options={}):
         """Request to remove a member from a vault."""
-        return self.__delete(f'/vault/{vault_id}/member/{user_id}')
+        return self.__delete(f'/vault/{vault_id}/member/{user_id}', requests_options)
 
-    def create_vault(self, **params):
+    def create_vault(self, requests_options={}, **params):
         """Request the creation of a new vault."""
-        return self.__post('/vault', params)
+        return self.__post('/vault', params, requests_options)
 
-    def edit_vault(self, vault_id, **params):
+    def edit_vault(self, vault_id, requests_options={}, **params):
         """Request an edit of an existing vault."""
-        return self.__put(f'/vault/{vault_id}', params)
+        return self.__put(f'/vault/{vault_id}', params, requests_options)
 
-    def delete_vault(self, vault_id):
+    def delete_vault(self, vault_id, requests_options={}):
         """Request the deletion of a vault."""
-        return self.__delete(f'/vault/{vault_id}')
+        return self.__delete(f'/vault/{vault_id}', requests_options)
 
     ###
     # API Object methods.
     ##
-    def get_object(self, object_id, children=False):
+    def get_object(self, object_id, children=False, requests_options={}):
         """Request a StoredSafe object and optionally its children."""
-        return self.__get(f'/object/{object_id}', {'children': 'true' if children else 'false'})
+        return self.__get(f'/object/{object_id}', {'children': 'true' if children else 'false'}, requests_options)
 
-    def decrypt_object(self, object_id):
+    def decrypt_object(self, object_id, requests_options={}):
         """Request the decryption of a StoredSafe object."""
-        return self.__get(f'/object/{object_id}', {'decrypt': 'true'})
+        return self.__get(f'/object/{object_id}', {'decrypt': 'true'}, requests_options)
 
-    def get_file(self, object_id):
+    def get_file(self, object_id, requests_options={}):
         """Request a base64 string of a file object."""
-        return self.__get(f'/object/{object_id}', {'decrypt': 'true', 'filedata': 'true'})
+        return self.__get(f'/object/{object_id}', {'decrypt': 'true', 'filedata': 'true'}, requests_options)
 
-    def create_object(self, **params):
+    def create_object(self, requests_options={}, **params):
         """Request the creation of an object."""
-        return self.__post('/object', params)
+        return self.__post('/object', params, requests_options)
 
-    def edit_object(self, object_id, **params):
+    def edit_object(self, object_id, requests_options={}, **params):
         """Request the edit of an existing object."""
-        return self.__put(f'/object/{object_id}', params)
+        return self.__put(f'/object/{object_id}', params, requests_options)
 
-    def delete_object(self, object_id):
+    def delete_object(self, object_id, requests_options={}):
         """Request the deletion of an object."""
-        return self.__delete(f'/object/{object_id}')
+        return self.__delete(f'/object/{object_id}', requests_options)
 
-    def find(self, needle):
+    def find(self, needle, requests_options={}):
         """Request all objects with searchable fields matching the needle."""
-        return self.__get('/find', {'needle': needle})
+        return self.__get('/find', {'needle': needle}, requests_options)
 
     ###
     # API Templates methods.
     ##
-    def list_templates(self):
+    def list_templates(self, requests_options={}):
         """Request a list of all available templates."""
-        return self.__get('/template')
+        return self.__get('/template', requests_options)
 
-    def get_template(self, template_id):
+    def get_template(self, template_id, requests_options={}):
         """Request a StoredSafe template."""
-        return self.__get(f'/template/{template_id}')
+        return self.__get(f'/template/{template_id}', requests_options)
 
     ###
     # API User methods
     ##
-    def list_users(self, search_string=None):
+    def list_users(self, search_string=None, requests_options={}):
         """Request list of all users or any users matching search string."""
         if search_string is None:
-            return self.__get('/user')
-        return self.__get(f'/user/{search_string}')
+            return self.__get('/user', requests_options)
+        return self.__get(f'/user/{search_string}', requests_options)
 
-    def get_user(self, user_id):
+    def get_user(self, user_id, requests_options={}):
         """Request user matching the user_id."""
-        return self.__get(f'/user/{user_id}')
+        return self.__get(f'/user/{user_id}', requests_options)
 
-    def create_user(self, **params):
+    def create_user(self, requests_options={}, **params):
         """Request the creation of a new user."""
-        return self.__post('/user', params)
+        return self.__post('/user', params, requests_options)
 
-    def edit_user(self, user_id, **params):
+    def edit_user(self, user_id, requests_options={}, **params):
         """Request the creation of a new user."""
-        return self.__put(f'/user/{user_id}', params)
+        return self.__put(f'/user/{user_id}', params, requests_options)
 
-    def delete_user(self, user_id):
+    def delete_user(self, user_id, requests_options={}):
         """Request the creation of a new user."""
-        return self.__delete(f'/user/{user_id}')
+        return self.__delete(f'/user/{user_id}', requests_options)
 
     ###
     # API Utils methods.
     ##
-    def status_values(self):
+    def status_values(self, requests_options={}):
         """Request a list of all available capabilities and permission bits."""
-        return self.__get('/utils/statusvalues')
+        return self.__get('/utils/statusvalues', requests_options)
 
-    def password_policies(self):
+    def password_policies(self, requests_options={}):
         """Request a list of all available password policies."""
-        return self.__get('/utils/policies')
+        return self.__get('/utils/policies', requests_options)
 
-    def version(self):
+    def version(self, requests_options={}):
         """Request the version of the StoredSafe server."""
-        return self.__get('/utils/version')
+        return self.__get('/utils/version', requests_options)
 
-    def generate_password(self, **params):
+    def generate_password(self, requests_options={}, **params):
         """Request a password generated with the passed settings (or vault policy)."""
-        return self.__get('/utils/pwgen', params=params)
+        return self.__get('/utils/pwgen', params, requests_options)
