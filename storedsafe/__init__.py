@@ -35,10 +35,11 @@ class StoredSafe:
             raise RCException()
         return StoredSafe(**config)
 
-    def __init__(self, host, apikey=None, token=None, version='1.0'):
+    def __init__(self, host, apikey=None, token=None, ca_path=None, version='1.0'):
         self.host = host
         self.apikey = apikey
         self.token = token
+        self.ca_path=ca_path
         self.api_version = version
 
     ###
@@ -52,7 +53,7 @@ class StoredSafe:
     def __auth(self, data):
         """Authenticate with StoredSafe and save token if the request was successful."""
         self.__assert_apikey_exists()
-        res = requests.post(self.__get_url('/auth'), json=data)
+        res = requests.post(self.__get_url('/auth'), json=data, verify=self.ca_path)
         if res.status_code == 200:
             data = res.json()
             self.token = data['CALLINFO']['token']
@@ -76,23 +77,23 @@ class StoredSafe:
         """Send a GET request to the provided relative API path."""
         self.__assert_token_exists()
         if params is None:
-            return requests.get(self.__get_url(path), headers=self.__headers())
-        return requests.get(self.__get_url(path), params=params, headers=self.__headers())
+            return requests.get(self.__get_url(path), headers=self.__headers(), verify=self.ca_path)
+        return requests.get(self.__get_url(path), params=params, headers=self.__headers(), verify=self.ca_path)
 
     def __post(self, path, data):
         """Send a POST request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.post(self.__get_url(path), json=data, headers=self.__headers())
+        return requests.post(self.__get_url(path), json=data, headers=self.__headers(), verify=self.ca_path)
 
     def __put(self, path, data):
         """Send a PUT request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.put(self.__get_url(path), json=data, headers=self.__headers())
+        return requests.put(self.__get_url(path), json=data, headers=self.__headers(), verify=self.ca_path)
 
     def __delete(self, path):
         """Send a DELETE request to the provided relative API path."""
         self.__assert_token_exists()
-        return requests.delete(self.__get_url(path), headers=self.__headers())
+        return requests.delete(self.__get_url(path), headers=self.__headers(), verify=self.ca_path)
 
     ###
     # API Auth methods.
