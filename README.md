@@ -25,6 +25,10 @@ api.login_totp(username='my-username', passphrase='my-passphrase', otp='my-timed
 
 # Login using YubiKey
 api.login_yubikey(username='my-username', passphrase='my-passphrase', otp='my-yubico-otp')
+
+# Login using client certificate
+# 3rd party software may be required to get the certificate data from your smartcard
+api.login_smartcard(username='my-username', passphrase='my-passphrase', cert='/path/to/cert', key='/path/to/key')
 ```
 
 In the event you already have a token, you can skip the previous step and input the token directly.
@@ -96,6 +100,7 @@ api = StoredSafe.from_rc(path='/path/to/rc-file')
 # Auth
 api.login_totp(username='my-username', passphrase='my-passphrase', otp='my-otp')
 api.login_yubikey(username='my-username', passphrase='my-passphrase', otp='my-otp')
+api.login_smartcard(username='my-username', passphrase='my-passphrase', cert='/path/to/cert', key='/path/to/key')
 api.logout()
 api.check()
 
@@ -131,3 +136,30 @@ api.version()
 api.generate_password() # Use default settings
 api.generate_password(**params)
 ```
+
+## Requests parameters
+
+In version `1.2.0+`, parameters can be passed directly to the requests library through various methods.
+
+Requests parameters can be applied directly to the StoredSafe API object:
+
+```python
+from storedsafe import StoredSafe
+
+requests_options = {
+    'timeout': 10,
+    'verify': ca_path
+}
+api = StoredSafe(host='my.site.com', apikey='my-apikey', token='my-storedsafe-token', **requests_options)
+
+# Adjust requests can be adjusted later through the `requests_options` attribute
+api.requests_options['timeout'] = 5
+```
+
+Or when calling any of the API methods:
+
+```python
+api.create_user(**user_params, timeout=10)
+```
+
+Options passed to one of the API methods will take precedence over the options defined on the StoredSafe object.
