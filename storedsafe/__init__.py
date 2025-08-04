@@ -52,7 +52,7 @@ class StoredSafe:
         if self.apikey is None:
             raise ApikeyUndefinedException()
 
-    def __headers(self, requests_options, token=True):
+    def __headers(self, requests_options={}, token=True):
         """Create the required headers for requests to the StoredSafe API and merge with options."""
         headers = {
             **self.requests_options.get('headers', {}),
