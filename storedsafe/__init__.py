@@ -315,6 +315,19 @@ class StoredSafe:
         """Request the creation of a new user."""
         return self.__delete(f'/user/{user_id}', **requests_options)
 
+    def get_user_certificate(self, user_id, requests_options={}):
+        """Request the user certificate used for mTLS"""
+        return self.__get(f'/usercert/{user_id}', **requests_options)
+
+    def set_user_certificate(self, user_id, cert_path, requests_options={}):
+        """Request a new user certificate for mTLS to be added to the user"""
+        files = {'user_cert': open(cert_path, 'rb')}
+        return self.__post(f'/usercert/{user_id}', files=files, **requests_options)
+
+    def remove_user_certificate(self, user_id, requests_options={}):
+        """Request the user certificate for mTLS to be removed from user"""
+        return self.__delete(f'/usercert/{user_id}', **requests_options)
+
     ###
     # API Utils methods.
     ##
