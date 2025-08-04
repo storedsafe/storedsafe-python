@@ -1,5 +1,6 @@
 """StoredSafe API wrapper module."""
 from pathlib import Path
+from base64 import b64encode
 import requests
 
 
@@ -33,7 +34,7 @@ class StoredSafe:
                         config['apikey'] = value
                     elif key == 'token':
                         config['token'] = value
-        except:
+        except Exception:
             raise RCException()
         return StoredSafe(**config, **requests_options)
 
@@ -130,6 +131,16 @@ class StoredSafe:
                 'headers': self.__headers(requests_options)
             })
 
+    def __post_file(self, path, file, data={}, mtls=False, **requests_options):
+        """Send a POST request to the provided relative API path."""
+        self.__assert_token_exists()
+        return requests.post(
+            self.__get_url(path, mtls), **{
+                **self.requests_options,
+                **requests_options,
+                'headers': self.__headers(requests_options)
+            }, files={'upload': file}, data=data)
+
     ###
     # API Auth methods.
     ##
@@ -221,10 +232,6 @@ class StoredSafe:
         """Request the decryption of a StoredSafe object."""
         return self.__get(f'/object/{object_id}', {'decrypt': 'true'}, **requests_options)
 
-    def get_file(self, object_id, requests_options={}):
-        """Request a base64 string of a file object."""
-        return self.__get(f'/object/{object_id}', {'decrypt': 'true', 'filedata': 'true'}, **requests_options)
-
     def create_object(self, requests_options={}, **params):
         """Request the creation of an object."""
         return self.__post('/object', params, **requests_options)
@@ -240,6 +247,37 @@ class StoredSafe:
     def find(self, needle, requests_options={}):
         """Request all objects with searchable fields matching the needle."""
         return self.__get('/find', {'needle': needle}, **requests_options)
+
+    ###
+    # API File (Object) methods.
+    ##
+    def get_mime_type(self, file, requests_options={}, **params):
+        """Check the mime type of the file and get the max upload size."""
+        data = {}
+        path = Path(file)
+        data['extension'] = path.suffix
+        data['size'] = path.stat().st_size
+        with open(file, 'rb') as f:
+            data['data'] = b64encode(f.read(64)).decode("utf-8")
+        return self.__post('/utils/get_mime_type', { **data, **params }, **requests_options)
+
+    def filecollect(self, file, requests_options={}, **params):
+        """Request the appropriate template for the file."""
+        path = Path(file)
+        with path.open('rb') as f:
+            data = f.read(64)
+        return self.__post_file('/filecollect', (path.name, data), params, **requests_options)
+
+    def upload_file(self, file, requests_options={}, **params):
+        """Request the creation of a file object."""
+        if not params.get('templateid'):
+            params['templateid'] = 3
+        return self.__post_file('/object', open(file, 'rb'), params, **requests_options)
+
+    def get_file(self, object_id, requests_options={}):
+        """Request a base64 string of a file object."""
+        return self.__get(f'/object/{object_id}', {'decrypt': 'true', 'filedata': 'true'}, **requests_options)
+
 
     ###
     # API Templates methods.
