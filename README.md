@@ -2,7 +2,7 @@
 
 Transparent Python wrapper for the StoredSafe REST-like API.
 
-Full documentation of the API response signatures and more advanced paramters can be found at the [StoredSafe API Documentation](https://developer.storedsafe.com/).
+Full documentation of the API response signatures and more advanced parameters can be found at the [StoredSafe API Documentation](https://developer.storedsafe.com/).
 
 
 ## Install
@@ -117,6 +117,9 @@ api.get_object(object_id) # String or integer
 api.get_object(object_id, children=True) # children False by default
 api.decrypt_object(object_id)
 api.get_file(object_id) # Decrypt file and get base64 version of file
+api.get_mime_type(file_path) # Get mimetype and max file upload size
+api.filecollect(file_path) # Get the suggested template for the file
+api.upload_file(file_path, **params)
 api.create_object(**params)
 api.edit_object(object_id, **params)
 api.delete_object(object_id)
