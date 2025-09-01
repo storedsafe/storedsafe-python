@@ -33,6 +33,11 @@ MOCK_DEFAULT_OPTIONS = {'option_always': 1,
 MOCK_OVERRIDE_OPTIONS = {'option_override': 2,
                          'headers': {'x-http-override': 2}}
 
+MOCK_FILE_SIZE = 128
+MOCK_FILE_EXTENSION = ".txt"
+MOCK_FILE_CONTENT = b"A"*MOCK_FILE_SIZE
+MOCK_FILE_PARAMS = { **MOCK_PARAMS, 'templateid': 3 }
+
 
 class MockResponse:
     """
